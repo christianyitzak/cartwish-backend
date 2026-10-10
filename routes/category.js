@@ -54,4 +54,9 @@ router.post('/', upload.single('icon'), async (req, res) => {
     });
 });
 
+router.get('/', async (req, res) => {
+    const categories = await Category.find().sort('name');
+    res.status(201).json(categories);
+});
+
 module.exports = router;
