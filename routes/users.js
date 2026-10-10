@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const router = express.Router();
 
+const authMiddleware = require('../middleware/auth');
 const User = require('../models/users');
 
 const createUserSchema = Joi.object({
@@ -73,6 +74,11 @@ router.post('/login', async (req, res) => {
     );
 
     res.status(201).json(token);
+});
+
+router.get('/', authMiddleware, async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
 });
 
 const generateToken = (data) => {
