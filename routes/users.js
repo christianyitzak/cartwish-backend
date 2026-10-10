@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const router = express.Router();
 
@@ -40,7 +41,46 @@ router.post('/register', async (req, res) => {
     });
 
     await newUser.save();
-    res.status(201).json(newUser);
+
+    const token = generateToken(
+        { _id: newUser._id, name: newUser.name }
+    );
+
+    res.status(201).json(token);
 });
+
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.status(400).json({
+            message: 'Invalid credentials!'
+        });
+    };
+
+    const comparePassword = await bcrypt.compare(password, user.password);
+
+    if (!comparePassword) {
+        return res.status(400).json({
+            message: 'Invalid credentials!'
+        });
+    };
+
+    const token = generateToken(
+        { _id: user._id, name: user.name }
+    );
+
+    res.status(201).json(token);
+});
+
+const generateToken = (data) => {
+    return jwt.sign(
+        data,
+        process.env.JWT_KEY,
+        { expiresIn: '2h' }
+    );
+}
 
 module.exports = router;
