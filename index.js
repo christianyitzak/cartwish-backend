@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 const userRoutes = require('./routes/users');
+const categoryRoutes = require('./routes/category');
 
 mongoose
     .connect(process.env.MONGODB_URI)
@@ -12,6 +13,7 @@ mongoose
 
 app.use(express.json());
 app.use('/api/user', userRoutes);
+app.use('/api/category', categoryRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
