@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
     await newUser.save();
 
     const token = generateToken(
-        { _id: newUser._id, name: newUser.name }
+        { _id: newUser._id, name: newUser.name, role: newUser.role }
     );
 
     res.status(201).json(token);
@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
     };
 
     const token = generateToken(
-        { _id: user._id, name: user.name }
+        { _id: user._id, name: user.name, role: user.role }
     );
 
     res.status(201).json(token);
