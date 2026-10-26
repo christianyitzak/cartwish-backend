@@ -14,6 +14,7 @@ mongoose
 
 app.use(express.json());
 app.use('/upload/category', express.static('upload/category'));
+app.use('/upload/products', express.static('upload/products'));
 app.use('/api/user', userRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/products', productRoutes);

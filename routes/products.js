@@ -65,6 +65,7 @@ router.get('/', async (req, res) => {
     const perPage = req.query.perPage || 8;
 
     const queryCategory = req.query.category || null;
+    const querySearch = req.query.search || null;
 
     let query = {};
 
@@ -78,6 +79,10 @@ router.get('/', async (req, res) => {
         };
 
         query.category = category._id;
+    };
+
+    if (querySearch) {
+        query.title = { $regex: querySearch, $options: '1' }
     };
 
     const products = await Product.find()
@@ -98,7 +103,7 @@ router.get('/', async (req, res) => {
         };
     });
 
-    const totalProducts = Product.countDocuments();
+    const totalProducts = Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / perPage);
 
     res.json({
