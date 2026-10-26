@@ -115,4 +115,18 @@ router.get('/', async (req, res) => {
     });
 })
 
+router.get('/:id', async (req, res) => {
+    const id = req.params.id;
+
+    const product = await Product.findById(id).populate('seller', '_id name email').populate('review.user', '_id name email').select('-category -__v')
+
+    if (!product) {
+        return res.status(404).json({
+            message: 'Product not found!'
+        });
+    };
+
+    res.json(product);
+});
+
 module.exports = router;
