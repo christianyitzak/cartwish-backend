@@ -3,6 +3,7 @@ const authMiddleware = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const multer = require('multer');
 const Product = require('../models/products');
+const Category = require('../models/category');
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -62,6 +63,22 @@ router.post('/', authMiddleware, checkRole('seller'), upload.array('images', 8),
 router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const perPage = req.query.perPage || 8;
+
+    const queryCategory = req.query.category || null;
+
+    let query = {};
+
+    if (queryCategory) {
+        const category = await Category.findOne({ name: queryCategory });
+
+        if (!category) {
+            return res.status(404).json({
+                message: 'Category not found!'
+            });
+        };
+
+        query.category = category._id;
+    };
 
     const products = await Product.find()
         .select('-description -seller -category -__v')
