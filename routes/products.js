@@ -59,4 +59,38 @@ router.post('/', authMiddleware, checkRole('seller'), upload.array('images', 8),
     res.status(201).json(newProduct);
 });
 
+router.get('/', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = req.query.perPage || 8;
+
+    const products = await Product.find()
+        .select('-description -seller -category -__v')
+        .skip((page - 1) * perPage)
+        .limit(perPage)
+        .lean();
+
+    const updatedProducts = products.map((product) => {
+        const numberOfReviews = product.review.length;
+        const sumOfRatings = product.review.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = sumOfRatings / (numberOfReviews || 1);
+
+        return {
+            ...product,
+            images: product.images[0],
+            review: { numberOfReviews, averageRating }
+        };
+    });
+
+    const totalProducts = Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / perPage);
+
+    res.json({
+        products: updatedProducts,
+        totalProducts,
+        totalPages,
+        currentPage: page,
+        postPerPage: perPage
+    });
+})
+
 module.exports = router;
