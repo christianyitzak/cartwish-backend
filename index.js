@@ -1,11 +1,21 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const winston = require('winston');
 const app = express();
 
 const userRoutes = require('./routes/users');
 const categoryRoutes = require('./routes/category');
 const productRoutes = require('./routes/products');
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    transports: [new winston.transports.Console()],
+});
 
 mongoose
     .connect(process.env.MONGODB_URI)
@@ -21,6 +31,7 @@ app.use('/api/products', productRoutes);
 
 app.use((error, req, res, next) => {
     console.log(error);
+    logger.error(error.message, error);
 
     return res.status(500).json({
         message: 'Internal Server Error!'
