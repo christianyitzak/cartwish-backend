@@ -2,8 +2,11 @@ const express = require('express');
 const authMiddleware = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const multer = require('multer');
+const fs = require('fs/promises');
+const path = require('path');
 const Product = require('../models/products');
 const Category = require('../models/category');
+const req = require('express/lib/request');
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -58,6 +61,23 @@ router.post('/', authMiddleware, checkRole('seller'), upload.array('images', 8),
     await newProduct.save();
 
     res.status(201).json(newProduct);
+});
+
+router.get('/suggestions', async (req, res) => {
+    try {
+        const search = req.query.search;
+        const products = await Product.find({ title: { $regex: search, $options: 'i' } })
+            .select('_id title')
+            .limit(10);
+
+        res.json(products);
+    } catch (error) {
+        console.log(error);
+
+        return res.status(500).json({
+            message: 'Internal Server Error!'
+        });
+    }
 });
 
 router.get('/', async (req, res) => {
@@ -127,6 +147,44 @@ router.get('/:id', async (req, res) => {
     };
 
     res.json(product);
+});
+
+router.delete('/:id', async (req, res) => {
+    const id = req.params.id;
+
+    const product = await Product.findById(id).select('seller images');
+
+    if (!product) {
+        return res.status(404).json({
+            message: 'Product not found!'
+        });
+    };
+
+    if (req.user.role === 'admin' || req.user._id === product.seller) {
+        await product.deleteOne();
+
+        if (product.images && product.images.length > 0) {
+            product.images.forEach(async (imageName) => {
+                const fullPath = path.join(__dirname, '../upload/products');
+
+                try {
+                    await fs.unlink(fullPath);
+                } catch (error) {
+                    console.error(`Error deleting file: ${fullPath}`, error);
+                }
+
+            });
+        };
+
+        return res.json({ message: 'Product deleted successfully!' });
+    };
+
+
+    return res
+        .status(403)
+        .json(
+            { message: 'Access denied: Only admin or seller can delete this product!' }
+        );
 });
 
 module.exports = router;
