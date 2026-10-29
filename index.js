@@ -19,6 +19,14 @@ app.use('/api/user', userRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/products', productRoutes);
 
+app.use((error, req, res, next) => {
+    console.log(error);
+
+    return res.status(500).json({
+        message: 'Internal Server Error!'
+    });
+})
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running at port ${port}`);

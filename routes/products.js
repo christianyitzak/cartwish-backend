@@ -63,21 +63,13 @@ router.post('/', authMiddleware, checkRole('seller'), upload.array('images', 8),
     res.status(201).json(newProduct);
 });
 
-router.get('/suggestions', async (req, res) => {
-    try {
-        const search = req.query.search;
-        const products = await Product.find({ title: { $regex: search, $options: 'i' } })
-            .select('_id title')
-            .limit(10);
+router.get('/suggestions', async (req, res, next) => {
+    const search = req.query.search;
+    const products = await Product.find({ title: { $regex: search, $options: 'i' } })
+        .select('_id title')
+        .limit(10);
 
-        res.json(products);
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            message: 'Internal Server Error!'
-        });
-    }
+    res.json(products);
 });
 
 router.get('/', async (req, res) => {
